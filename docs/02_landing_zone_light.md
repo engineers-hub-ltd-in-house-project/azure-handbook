@@ -69,31 +69,44 @@ echo "Log Analytics Workspace ID: $LAW_ID"
 
 **ステップ 3-1: ポリシー定義の検索**
 
-Azure には、一般的なユースケースに対応した数百の「組み込みポリシー」が用意されています。「タグを必須にする」という組み込みポリシーの「定義ID」を検索して取得します。
+Azure には、一般的なユースケースに対応した数百の「組み込みポリシー」が用意されています。「タグを必須にする」という組み込みポリシーの「名前（GUID）」を検索して取得します。
 
 ```bash
-export POLICY_DEF_ID=$(az policy definition list --query "[?displayName=='Require a tag on resources'].id" --output tsv)
+# ポリシー定義の名前（GUID形式）を取得
+export POLICY_DEF_NAME=$(az policy definition list --query "[?displayName=='Require a tag on resources'].name" --output tsv)
 
-echo "Policy Definition ID: $POLICY_DEF_ID"
+echo "Policy Definition Name: $POLICY_DEF_NAME"
 ```
 
 **ステップ 3-2: ポリシーの割り当て**
 
 ポリシー定義が見つかったら、それを特定の範囲（スコープ）に「割り当て（Assignment）」ます。今回は、サブスクリプション全体に適用してみましょう。これにより、このサブスクリプション内に作成されるすべてのリソースがルールの対象となります。
 
-`--params` で、必須とするタグの名前（今回は `owner`）を指定している点に注目してください。
+パラメータはJSONファイル経由で渡すことで、エスケープの問題を回避できます。
 
 ```bash
 # 現在のサブスクリプションIDを取得
 export SUB_ID=$(az account show --query id --output tsv)
 
+# パラメータファイルを作成
+cat > params.json << EOF
+{
+  "tagName": {
+    "value": "owner"
+  }
+}
+EOF
+
 # ポリシーの割り当てを実行
 az policy assignment create \
   --name $POLICY_ASSIGNMENT_NAME \
   --display-name "Require 'owner' tag on all resources" \
-  --policy $POLICY_DEF_ID \
+  --policy $POLICY_DEF_NAME \
   --scope "/subscriptions/$SUB_ID" \
-  --params '{ "tagName": { "value": "owner" } }'
+  --params @params.json
+
+# パラメータファイルを削除
+rm params.json
 ```
 
 ### 6. 検証：ガードレールは機能しているか？
