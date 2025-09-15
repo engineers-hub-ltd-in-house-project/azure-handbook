@@ -1,0 +1,22 @@
+# General
+.DS_Store
+.vscode/
+.idea/
+
+# mdBook
+book/
+target/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Bicep
+*.bicepparam

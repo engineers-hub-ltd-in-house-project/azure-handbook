@@ -1,0 +1,9 @@
+[book]
+authors = ["Your Name"]
+language = "ja"
+multilingual = false
+src = "docs"
+title = "Azure CLI 実践ハンドブック"
+
+[output.html]
+git-repository-url = "https://github.com/your-org/azure-handbook"
