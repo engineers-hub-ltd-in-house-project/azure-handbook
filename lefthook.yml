@@ -1,0 +1,8 @@
+pre-push:
+  commands:
+    lint:
+      glob: "*.md"
+      run: npm run lint {files}
+    format-check:
+      glob: "*.{js,json,md,yml}"
+      run: npm run format:check {files}

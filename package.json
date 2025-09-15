@@ -1,0 +1,25 @@
+{
+  "name": "azure-handbook",
+  "version": "1.0.0",
+  "description": "A hands-on guide to the Azure CLI for engineers experienced with other clouds.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "markdownlint --config .markdownlint.json",
+    "format": "prettier --write",
+    "format:check": "prettier --check"
+  },
+  "keywords": [
+    "azure",
+    "cli",
+    "handbook",
+    "bicep"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lefthook": "^1.13.0",
+    "markdownlint-cli": "^0.45.0",
+    "prettier": "^3.6.2"
+  }
+}

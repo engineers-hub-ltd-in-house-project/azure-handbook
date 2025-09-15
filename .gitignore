@@ -20,3 +20,6 @@ override.tf.json
 
 # Bicep
 *.bicepparam
+
+# Node
+node_modules/
