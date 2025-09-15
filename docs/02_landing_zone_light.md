@@ -65,22 +65,28 @@ echo "Log Analytics Workspace ID: $LAW_ID"
 
 次に、ガバナンスを効かせるための **Azure Policy** を設定します。Azure Policy は、リソースの構成ルールを定義し、それを強制するサービスです。AWS の SCP (Service Control Policies) や Config Rules に似た役割を果たします。
 
-今回は、「リソースには `owner` タグが必須」というルールを適用します。
+今回は、「リソースには `owner` タグが必須」というルールを適用します。Azure では、リソースグループとその他のリソースで別々のポリシー定義が必要なため、両方を設定します。
 
 **ステップ 3-1: ポリシー定義の検索**
 
 Azure には、一般的なユースケースに対応した数百の「組み込みポリシー」が用意されています。「タグを必須にする」という組み込みポリシーの「名前（GUID）」を検索して取得します。
 
-```bash
-# ポリシー定義の名前（GUID形式）を取得
-export POLICY_DEF_NAME=$(az policy definition list --query "[?displayName=='Require a tag on resources'].name" --output tsv)
+リソースグループとその他のリソースでは別のポリシー定義が必要です：
 
-echo "Policy Definition Name: $POLICY_DEF_NAME"
+```bash
+# リソース用のポリシー定義名を取得
+export POLICY_DEF_RESOURCES=$(az policy definition list --query "[?displayName=='Require a tag on resources'].name" --output tsv)
+
+# リソースグループ用のポリシー定義名を取得
+export POLICY_DEF_RG=$(az policy definition list --query "[?displayName=='Require a tag on resource groups'].name" --output tsv)
+
+echo "Policy for Resources: $POLICY_DEF_RESOURCES"
+echo "Policy for Resource Groups: $POLICY_DEF_RG"
 ```
 
 **ステップ 3-2: ポリシーの割り当て**
 
-ポリシー定義が見つかったら、それを特定の範囲（スコープ）に「割り当て（Assignment）」ます。今回は、サブスクリプション全体に適用してみましょう。これにより、このサブスクリプション内に作成されるすべてのリソースがルールの対象となります。
+ポリシー定義が見つかったら、それを特定の範囲（スコープ）に「割り当て（Assignment）」ます。今回は、サブスクリプション全体に適用してみましょう。これにより、このサブスクリプション内に作成されるすべてのリソースとリソースグループがルールの対象となります。
 
 パラメータはJSONファイル経由で渡すことで、エスケープの問題を回避できます。
 
@@ -97,11 +103,19 @@ cat > params.json << EOF
 }
 EOF
 
-# ポリシーの割り当てを実行
+# リソース用のポリシーを割り当て
 az policy assignment create \
-  --name $POLICY_ASSIGNMENT_NAME \
+  --name "${POLICY_ASSIGNMENT_NAME}-resources" \
   --display-name "Require 'owner' tag on all resources" \
-  --policy $POLICY_DEF_NAME \
+  --policy $POLICY_DEF_RESOURCES \
+  --scope "/subscriptions/$SUB_ID" \
+  --params @params.json
+
+# リソースグループ用のポリシーを割り当て
+az policy assignment create \
+  --name "${POLICY_ASSIGNMENT_NAME}-rg" \
+  --display-name "Require 'owner' tag on resource groups" \
+  --policy $POLICY_DEF_RG \
   --scope "/subscriptions/$SUB_ID" \
   --params @params.json
 
@@ -118,16 +132,17 @@ rm params.json
 まず、意図した通りにポリシーがサブスクリプションに割り当てられているかを確認します。
 
 ```bash
-az policy assignment list --query "[?name=='$POLICY_ASSIGNMENT_NAME'].{Name:displayName, Scope:scope}" --output table
+az policy assignment list --query "[?contains(name, '$POLICY_ASSIGNMENT_NAME')].{Name:displayName, Scope:scope}" --output table
 ```
 
 **【成功の確認】**
-以下のように、`Name` に設定した表示名、`Scope` にサブスクリプションのパスが表示されれば成功です。
+以下のように、両方のポリシーが表示され、`Scope` にサブスクリプションのパスが表示されれば成功です。
 
 ```
-Name                                   Scope
--------------------------------------  ---------------------------------------------------
-Require 'owner' tag on all resources  /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Name                                    Scope
+--------------------------------------  ---------------------------------------------------
+Require 'owner' tag on all resources   /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Require 'owner' tag on resource groups /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 **検証2: ポリシー効果の確認（重要）**
@@ -149,9 +164,11 @@ az group create --name rg-test-policy --location $LOCATION
 検証が終わったので、作成したポリシー割り当てを削除して、サブスクリプションを元の状態に戻します。
 
 ```bash
-az policy assignment delete --name $POLICY_ASSIGNMENT_NAME --scope "/subscriptions/$SUB_ID"
+# 両方のポリシー割り当てを削除
+az policy assignment delete --name "${POLICY_ASSIGNMENT_NAME}-resources" --scope "/subscriptions/$SUB_ID"
+az policy assignment delete --name "${POLICY_ASSIGNMENT_NAME}-rg" --scope "/subscriptions/$SUB_ID"
 
-echo "Policy assignment '$POLICY_ASSIGNMENT_NAME' has been deleted."
+echo "Policy assignments have been deleted."
 ```
 
 Log Analytics ワークスペースは共通リソースグループ `rg-hdbk-common` 内にあり、後続の章で利用するため、まだ削除しません。
