@@ -10,6 +10,79 @@ Azure には、仮想マシン (IaaS) からサーバーレス (PaaS) まで、�
 
 この章では、最も手軽かつモダンなアプローチである **Azure Container Apps** を使って、コンテナ化されたアプリケーションを世界に公開するハンズオンを体験します。
 
+## Azure Container Apps アーキテクチャ
+
+```mermaid
+graph TB
+    subgraph "Internet"
+        Client[Web Browser/<br/>Client]
+    end
+
+    subgraph "Azure Container Apps Environment"
+        subgraph "Managed Infrastructure"
+            LB[Load Balancer/<br/>Ingress Controller]
+            K8S[Kubernetes<br/>Control Plane<br/>※ 抽象化済み]
+        end
+
+        subgraph "Container Apps"
+            App1[app-hello-world<br/>Replicas: 0-10]
+            App2[Future App 2]
+            App3[Future App 3]
+        end
+
+        subgraph "Observability"
+            LAW[Log Analytics<br/>Workspace]
+        end
+    end
+
+    subgraph "Container Registry"
+        MCR[Microsoft Container<br/>Registry<br/>mcr.microsoft.com]
+    end
+
+    Client -->|HTTPS<br/>FQDN| LB
+    LB --> App1
+    LB --> App2
+    LB --> App3
+    K8S -->|Orchestrate| App1
+    K8S -->|Orchestrate| App2
+    K8S -->|Orchestrate| App3
+    App1 -.->|Pull Image| MCR
+    App1 -->|Logs/Metrics| LAW
+    App2 -->|Logs/Metrics| LAW
+    App3 -->|Logs/Metrics| LAW
+
+    style Client fill:#ffc107
+    style LB fill:#2196f3,color:#fff
+    style App1 fill:#4caf50,color:#fff
+    style K8S fill:#9e9e9e,color:#fff
+    style LAW fill:#673ab7,color:#fff
+    style MCR fill:#ff5722,color:#fff
+```
+
+### Container Apps のスケーリング動作
+
+```mermaid
+flowchart LR
+    subgraph "Auto Scaling"
+        A[リクエスト<br/>増加] --> B{スケール<br/>ルール判定}
+        B -->|CPU > 70%| C[レプリカ<br/>追加]
+        B -->|RPS > 100| C
+        B -->|Queue Length > 10| C
+        C --> D[新インスタンス<br/>起動]
+        D --> E[トラフィック<br/>分散]
+
+        F[リクエスト<br/>減少] --> G{スケール<br/>ルール判定}
+        G -->|負荷低下| H[レプリカ<br/>削除]
+        H --> I[最小: 0<br/>※ Scale to Zero]
+    end
+
+    style A fill:#ffeb3b
+    style C fill:#4caf50,color:#fff
+    style D fill:#2196f3,color:#fff
+    style H fill:#ff9800,color:#fff
+    style I fill:#f44336,color:#fff
+```
+
 ---
 
 ## ハンズオン：Azure Container Apps で "Hello World"

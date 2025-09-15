@@ -6,6 +6,28 @@
 
 まず、AWS/GCP 経験者が混同しやすい Azure の基本用語を確認します。特に **リソースグループ** の概念は Azure の根幹をなすため、しっかり理解しましょう。
 
+### Azure のリソース階層構造
+
+```mermaid
+graph TD
+    A[Microsoft Entra ID<br/>テナント] --> B[管理グループ<br/>ルート]
+    B --> C[管理グループ<br/>Production]
+    B --> D[管理グループ<br/>Development]
+    C --> E[サブスクリプション<br/>Prod-1]
+    C --> F[サブスクリプション<br/>Prod-2]
+    D --> G[サブスクリプション<br/>Dev-1]
+    E --> H[リソースグループ<br/>RG-App]
+    E --> I[リソースグループ<br/>RG-Data]
+    H --> J[リソース<br/>VM/Storage/DB]
+    I --> K[リソース<br/>SQL/Cosmos]
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style G fill:#bbf,stroke:#333,stroke-width:2px
+    style H fill:#bfb,stroke:#333,stroke-width:2px
+    style I fill:#bfb,stroke:#333,stroke-width:2px
+```
+
 | Azure                               | AWS                               | GCP                        | 説明とポイント                                                                                             |
 | ----------------------------------- | --------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Microsoft Entra ID** (旧 Azure AD) | IAM (Identity Center)             | Cloud Identity / IAM       | テナント全体の ID とアクセス管理の基盤。ユーザ、グループ、サービスプリンシパルを管理します。         |
@@ -40,6 +62,24 @@ terraform -version
 ### 2.2. Azure へのログインとサブスクリプション設定
 
 次に、ハンズオンで使用する Azure アカウントにログインします。
+
+```mermaid
+flowchart LR
+    A[Azure CLI<br/>インストール] --> B[az login<br/>実行]
+    B --> C[ブラウザ認証]
+    C --> D[サブスクリプション<br/>一覧表示]
+    D --> E[対象サブスクリプション<br/>選択]
+    E --> F[設定確認]
+    F --> G[準備完了]
+
+    style A fill:#e1f5fe
+    style B fill:#b3e5fc
+    style C fill:#81d4fa
+    style D fill:#4fc3f7
+    style E fill:#29b6f6
+    style F fill:#03a9f4
+    style G fill:#0288d1
+```
 
 **手順1: ログイン**
 

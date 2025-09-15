@@ -10,6 +10,98 @@
 
 この一連の流れは、AWS の CloudWatch (Logs, Metrics, Alarms) や、Google Cloud の Operations Suite (Logging, Monitoring, Alerting) と同じ考え方に基づいています。この章のハンズオンを通じて、Azure での基本的な監視パイプラインを構築するスキルを習得しましょう。
 
+## Azure Monitor アーキテクチャ
+
+```mermaid
+graph TB
+    subgraph "Azure Resources"
+        VM[Virtual Machines]
+        Storage[Storage Accounts]
+        DB[Databases]
+        Apps[Container Apps]
+    end
+
+    subgraph "Data Collection"
+        DS[Diagnostic Settings]
+        MA[Monitor Agent]
+        AI[Application Insights]
+    end
+
+    subgraph "Data Storage & Analysis"
+        LAW[Log Analytics<br/>Workspace]
+        Metrics[Metrics Store]
+    end
+
+    subgraph "Visualization & Action"
+        Workbooks[Workbooks]
+        Dashboard[Dashboards]
+        Alerts[Alert Rules]
+        AG[Action Groups]
+    end
+
+    subgraph "Notification Channels"
+        Email[Email]
+        SMS[SMS]
+        Webhook[Webhook]
+        Logic[Logic Apps]
+    end
+
+    VM --> MA
+    Storage --> DS
+    DB --> DS
+    Apps --> AI
+
+    MA --> LAW
+    DS --> LAW
+    AI --> LAW
+    DS --> Metrics
+
+    LAW --> Workbooks
+    LAW --> Dashboard
+    LAW --> Alerts
+    Metrics --> Alerts
+
+    Alerts --> AG
+    AG --> Email
+    AG --> SMS
+    AG --> Webhook
+    AG --> Logic
+
+    style LAW fill:#4caf50,color:#fff
+    style Alerts fill:#ff9800,color:#fff
+    style DS fill:#2196f3,color:#fff
+    style AG fill:#9c27b0,color:#fff
+```
+
+### 監視データの収集から対応までのフロー
+
+```mermaid
+flowchart LR
+    subgraph "1. Collect"
+        A[リソース<br/>イベント発生] --> B[診断設定<br/>有効化]
+        B --> C[ログ/メトリック<br/>収集]
+    end
+
+    subgraph "2. Analyze"
+        C --> D[Log Analytics<br/>Workspace]
+        D --> E[KQL クエリ<br/>実行]
+        E --> F[データ<br/>分析結果]
+    end
+
+    subgraph "3. Respond"
+        F --> G{閾値<br/>超過?}
+        G -->|Yes| H[アラート<br/>発火]
+        G -->|No| I[正常]
+        H --> J[アクション<br/>グループ]
+        J --> K[通知/<br/>自動修復]
+    end
+
+    style A fill:#e3f2fd
+    style D fill:#e8f5e9
+    style H fill:#ffebee
+    style K fill:#fff3e0
+```
+
 ---
 
 ## ハンズオン：ストレージアカウントの操作を監視し、アラートを設定する

@@ -14,6 +14,90 @@
 
 この章を終えれば、あなたは手動でのCLI操作から脱却し、コードに基づいたインフラ管理と、それを自動デプロイする最新のDevOpsワークフローを構築できるようになります。
 
+## IaC と CI/CD パイプライン
+
+```mermaid
+graph LR
+    subgraph "Development"
+        Dev[Developer]
+        Code[Bicep/Terraform<br/>Code]
+        Git[Git Repository]
+    end
+
+    subgraph "CI/CD Pipeline"
+        GHA[GitHub Actions/<br/>Azure DevOps]
+        Validate[構文検証]
+        Plan[変更計画]
+        Test[テスト環境<br/>デプロイ]
+        Approve[承認]
+        Deploy[本番環境<br/>デプロイ]
+    end
+
+    subgraph "Azure Environment"
+        RG[Resource Groups]
+        Resources[Azure Resources]
+        State[State Storage]
+    end
+
+    Dev -->|Write| Code
+    Code -->|Push| Git
+    Git -->|Trigger| GHA
+    GHA --> Validate
+    Validate --> Plan
+    Plan --> Test
+    Test --> Approve
+    Approve --> Deploy
+    Deploy --> RG
+    RG --> Resources
+    Resources -.->|State| State
+    State -.->|Reference| Plan
+
+    style Dev fill:#4caf50,color:#fff
+    style GHA fill:#ff9800,color:#fff
+    style Deploy fill:#2196f3,color:#fff
+    style Resources fill:#9c27b0,color:#fff
+```
+
+### Bicep vs ARM Template vs Terraform
+
+```mermaid
+flowchart TD
+    subgraph "Infrastructure as Code Options"
+        subgraph "Azure Native"
+            ARM[ARM Template<br/>JSON形式<br/>冗長]
+            Bicep[Bicep<br/>DSL形式<br/>簡潔]
+        end
+
+        subgraph "Multi-Cloud"
+            TF[Terraform<br/>HCL形式<br/>マルチクラウド]
+        end
+    end
+
+    subgraph "特徴比較"
+        B1[Day 0 サポート]
+        B2[Azure専用]
+        B3[無料]
+
+        T1[マルチクラウド]
+        T2[大規模エコシステム]
+        T3[State管理必要]
+    end
+
+    Bicep --> B1
+    Bicep --> B2
+    Bicep --> B3
+
+    TF --> T1
+    TF --> T2
+    TF --> T3
+
+    ARM -->|Transpile| Bicep
+
+    style Bicep fill:#2196f3,color:#fff
+    style TF fill:#7c4dff,color:#fff
+    style ARM fill:#9e9e9e,color:#fff
+```
+
 ---
 
 ## Bicep とは？

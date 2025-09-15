@@ -10,6 +10,68 @@
 
 この章のハンズオンを終えると、あなたは「最小権限の原則」に従ってリソースへのアクセスを制御し、アプリケーションの資格情報をソースコードから分離して安全に管理するための、基本的かつ極めて重要なスキルを習得できます。
 
+## RBAC とセキュリティアーキテクチャ
+
+```mermaid
+graph TD
+    subgraph "Microsoft Entra ID"
+        User[User/<br/>Service Principal]
+    end
+
+    subgraph "Azure RBAC"
+        Role[Role Assignment<br/>Key Vault Secrets Officer]
+    end
+
+    subgraph "Scope Hierarchy"
+        MG[Management Group]
+        Sub[Subscription]
+        RG[Resource Group<br/>rg-hdbk-sec]
+        KV[Key Vault<br/>kv-hdbk-sec-***]
+    end
+
+    subgraph "Secrets in Key Vault"
+        S1[db-password]
+        S2[api-key]
+        S3[certificates]
+    end
+
+    User -->|Assigned| Role
+    Role -->|Applied to| KV
+    MG --> Sub
+    Sub --> RG
+    RG --> KV
+    KV --> S1
+    KV --> S2
+    KV --> S3
+
+    style User fill:#4caf50,color:#fff
+    style Role fill:#ff9800,color:#fff
+    style KV fill:#2196f3,color:#fff
+    style S1 fill:#f44336,color:#fff
+    style S2 fill:#f44336,color:#fff
+    style S3 fill:#f44336,color:#fff
+```
+
+### RBAC の権限付与フロー
+
+```mermaid
+flowchart LR
+    A[リソース作成<br/>Key Vault] --> B[権限なし状態<br/>誰もアクセス不可]
+    B --> C[プリンシパル特定<br/>User/SP/Group]
+    C --> D[ロール選択<br/>適切な権限セット]
+    D --> E[スコープ決定<br/>権限の範囲]
+    E --> F[ロール割り当て<br/>az role assignment]
+    F --> G[アクセス可能<br/>権限に基づく操作]
+
+    style A fill:#e3f2fd
+    style B fill:#ffebee
+    style C fill:#fff3e0
+    style D fill:#f3e5f5
+    style E fill:#e8f5e9
+    style F fill:#e1f5fe
+    style G fill:#c8e6c9
+```
+
 ---
 
 ## ハンズオン：Key Vault と RBAC によるシークレット管理

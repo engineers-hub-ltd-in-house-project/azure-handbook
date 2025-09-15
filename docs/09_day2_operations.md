@@ -6,6 +6,105 @@
 
 この章では、Day 2 オペレーションで頻繁に発生するであろう典型的なタスクを、CLIベースの **「Runbook（手順書）」** 形式で紹介します。これまでのように新しいものを構築するのではなく、既存のリソースを「どう管理していくか」に焦点を当てます。
 
+## Day 2 運用タスクの全体像
+
+```mermaid
+graph TB
+    subgraph "Day 2 Operations"
+        subgraph "Performance"
+            Scale[スケーリング調整]
+            Tune[パフォーマンス調整]
+            LoadBalance[負荷分散設定]
+        end
+
+        subgraph "Maintenance"
+            Update[パッチ適用]
+            Backup[バックアップ]
+            Restore[リストア]
+        end
+
+        subgraph "Cost Management"
+            RightSize[リソースサイズ調整]
+            Cleanup[不要リソース削除]
+            Reserved[予約購入]
+        end
+
+        subgraph "Security"
+            Rotate[資格情報ローテーション]
+            Audit[監査ログレビュー]
+            Compliance[コンプライアンス確認]
+        end
+
+        subgraph "Troubleshooting"
+            Logs[ログ分析]
+            Debug[デバッグ]
+            RCA[根本原因分析]
+        end
+    end
+
+    Scale --> Metrics[メトリック監視]
+    Backup --> Storage[バックアップストレージ]
+    Rotate --> KeyVault[Key Vault]
+    Logs --> LAW[Log Analytics]
+    Cleanup --> Cost[コスト分析]
+
+    style Scale fill:#4caf50,color:#fff
+    style Backup fill:#2196f3,color:#fff
+    style Rotate fill:#ff9800,color:#fff
+    style Cleanup fill:#9c27b0,color:#fff
+    style Logs fill:#f44336,color:#fff
+```
+
+### 運用タスクの自動化フロー
+
+```mermaid
+flowchart LR
+    subgraph "Trigger"
+        Alert[アラート発火]
+        Schedule[スケジュール]
+        Manual[手動実行]
+    end
+
+    subgraph "Automation"
+        Runbook[Azure Automation<br/>Runbook]
+        Logic[Logic Apps]
+        Function[Azure Functions]
+    end
+
+    subgraph "Actions"
+        Restart[サービス再起動]
+        ScaleOut[スケールアウト]
+        Backup2[バックアップ実行]
+        Notify[通知送信]
+    end
+
+    subgraph "Verification"
+        Check[正常性確認]
+        Log[ログ記録]
+        Report[レポート生成]
+    end
+
+    Alert --> Runbook
+    Schedule --> Logic
+    Manual --> Function
+
+    Runbook --> Restart
+    Logic --> ScaleOut
+    Function --> Backup2
+
+    Restart --> Check
+    ScaleOut --> Check
+    Backup2 --> Check
+
+    Check --> Log
+    Log --> Report
+    Check --> Notify
+
+    style Alert fill:#ff5252,color:#fff
+    style Runbook fill:#2196f3,color:#fff
+    style Check fill:#4caf50,color:#fff
+```
+
 ---
 
 ## Runbook 1: コンテナアプリのスケーリングルールの調整

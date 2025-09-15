@@ -12,6 +12,91 @@
 
 この章のハンズオンでは、セキュリティの観点から極めて重要な、**VNet統合を利用して PostgreSQL サーバーをプライベートなサブネットにデプロイする**という、実践的なシナリオを体験します。
 
+## データサービスのネットワーク統合アーキテクチャ
+
+```mermaid
+graph TB
+    subgraph "Internet"
+        Public[Public Network]
+    end
+
+    subgraph "Azure Virtual Network (10.30.0.0/16)"
+        subgraph "App Subnet (10.30.1.0/24)"
+            App[Applications/<br/>Container Apps]
+        end
+
+        subgraph "DB Subnet (10.30.2.0/24)"
+            subgraph "Delegated to PostgreSQL"
+                PG[PostgreSQL<br/>Flexible Server<br/>Private IP Only]
+                NIC[Network Interface<br/>※ Azure Managed]
+            end
+        end
+    end
+
+    subgraph "Storage Account"
+        Blob[Blob Storage]
+        Table[Table Storage]
+        Queue[Queue Storage]
+        Files[File Storage]
+    end
+
+    Public -.->|Blocked| PG
+    App -->|Private Connection<br/>10.30.2.x| PG
+    PG --> NIC
+    App -->|Private Endpoint<br/>or Public| Blob
+    App --> Table
+    App --> Queue
+    App --> Files
+
+    style Public fill:#f44336,color:#fff
+    style PG fill:#336791,color:#fff
+    style App fill:#4caf50,color:#fff
+    style Blob fill:#2196f3,color:#fff
+    style NIC fill:#9e9e9e,color:#fff
+```
+
+### Azure Storage Account の構成要素
+
+```mermaid
+graph LR
+    subgraph "Storage Account"
+        subgraph "Services"
+            B[Blob Storage<br/>Object Storage]
+            F[File Storage<br/>SMB/NFS Share]
+            Q[Queue Storage<br/>Message Queue]
+            T[Table Storage<br/>NoSQL KV Store]
+        end
+
+        subgraph "Access Tiers"
+            Hot[Hot Tier<br/>頻繁アクセス]
+            Cool[Cool Tier<br/>30日以上]
+            Archive[Archive Tier<br/>180日以上]
+        end
+
+        subgraph "Redundancy"
+            LRS[LRS<br/>ローカル冗長]
+            ZRS[ZRS<br/>ゾーン冗長]
+            GRS[GRS<br/>地理冗長]
+        end
+    end
+
+    B --> Hot
+    B --> Cool
+    B --> Archive
+    F --> Hot
+    T --> Hot
+    Q --> Hot
+
+    B --> LRS
+    B --> ZRS
+    B --> GRS
+
+    style B fill:#2196f3,color:#fff
+    style F fill:#4caf50,color:#fff
+    style Q fill:#ff9800,color:#fff
+    style T fill:#9c27b0,color:#fff
+```
+
 ---
 
 ## ハンズオン：VNet統合された PostgreSQL サーバーの構築

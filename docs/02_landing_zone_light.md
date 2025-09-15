@@ -4,7 +4,44 @@ Azure の世界へようこそ。第1章で準備運動は完了しました。�
 
 しかし、いきなり仮想マシンやデータベースを作成する前に、私たちはまず「安全に実験できる砂場」を用意する必要があります。これを Azure の世界では **「ランディングゾーン」** と呼びます。ランディングゾーンとは、セキュリティ、ガバナンス、ネットワークといった基本的な設定が予め施された、アプリケーションを「着陸（デプロイ）」させるための環境のことです。
 
-この章で構築するのは、その最もシンプルな「Light版」です。目的は、今後のハンズオンを安全かつ管理された形で行うための、最低限のガードレールを設定すること。具体的には、以下の2つを CLI で構築します。
+この章で構築するのは、その最もシンプルな「Light版」です。目的は、今後のハンズオンを安全かつ管理された形で行うための、最低限のガードレールを設定すること。
+
+## ランディングゾーンのアーキテクチャ
+
+```mermaid
+graph TB
+    subgraph "Azure Subscription"
+        subgraph "Resource Group: rg-hdbk-common"
+            LAW[Log Analytics<br/>Workspace<br/>law-hdbk]
+        end
+
+        Policy1[Azure Policy<br/>Require owner tag<br/>on resources]
+        Policy2[Azure Policy<br/>Require owner tag<br/>on resource groups]
+
+        subgraph "Future Resources"
+            VM[Virtual Machines]
+            Storage[Storage Accounts]
+            DB[Databases]
+        end
+    end
+
+    VM -.->|Logs| LAW
+    Storage -.->|Logs| LAW
+    DB -.->|Logs| LAW
+
+    Policy1 -->|Enforces| VM
+    Policy1 -->|Enforces| Storage
+    Policy1 -->|Enforces| DB
+    Policy2 -->|Enforces| VM
+    Policy2 -->|Enforces| Storage
+    Policy2 -->|Enforces| DB
+
+    style LAW fill:#4CAF50,color:#fff
+    style Policy1 fill:#2196F3,color:#fff
+    style Policy2 fill:#2196F3,color:#fff
+```
+
+具体的には、以下の2つを CLI で構築します。
 
 1.  **ログ集約基盤**: すべての操作ログやリソースの診断ログを一元的に収集・分析するための「Log Analytics ワークスペース」。これは、何か問題が起きたときの調査や、セキュリティ監視の基本となります。
 2.  **ガバナンスの第一歩**: リソースの責任者を明確にするため、「`owner`タグが必須である」というルール（Azure Policy）をサブスクリプション全体に適用します。これにより、誰が作ったかわからない「野良リソース」が生まれるのを防ぎます。
@@ -66,6 +103,28 @@ echo "Log Analytics Workspace ID: $LAW_ID"
 次に、ガバナンスを効かせるための **Azure Policy** を設定します。Azure Policy は、リソースの構成ルールを定義し、それを強制するサービスです。AWS の SCP (Service Control Policies) や Config Rules に似た役割を果たします。
 
 今回は、「リソースには `owner` タグが必須」というルールを適用します。Azure では、リソースグループとその他のリソースで別々のポリシー定義が必要なため、両方を設定します。
+
+### ポリシー適用の流れ
+
+```mermaid
+flowchart LR
+    A[ポリシー定義<br/>検索] --> B[ポリシー<br/>割り当て]
+    B --> C[スコープ<br/>設定]
+    C --> D[パラメータ<br/>指定]
+    D --> E[適用]
+    E --> F{ownerタグ<br/>あり？}
+    F -->|Yes| G[リソース<br/>作成成功]
+    F -->|No| H[リソース<br/>作成拒否]
+
+    style A fill:#e3f2fd
+    style B fill:#bbdefb
+    style C fill:#90caf9
+    style D fill:#64b5f6
+    style E fill:#42a5f5
+    style F fill:#ffc107
+    style G fill:#4caf50,color:#fff
+    style H fill:#f44336,color:#fff
+```
 
 **ステップ 3-1: ポリシー定義の検索**
 

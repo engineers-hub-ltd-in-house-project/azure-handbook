@@ -14,6 +14,32 @@
 - **自動化への道筋**: シェルスクリプトや CI/CD パイプラインへの組み込みが容易になります。
 - **"Infrastructure as Code" の素養**: Bicep や Terraform へのステップアップがスムーズになります。
 
+## 本書の学習パス
+
+本書を通じて、以下の流れで Azure のスキルを体系的に習得していきます。
+
+```mermaid
+graph LR
+    A[準備<br/>第1章] --> B[ランディングゾーン<br/>第2章]
+    B --> C[ネットワーク<br/>第3章]
+    C --> D[ID・セキュリティ<br/>第4章]
+    D --> E[コンピュート<br/>第5章]
+    E --> F[データサービス<br/>第6章]
+    F --> G[監視<br/>第7章]
+    G --> H[IaC/CI/CD<br/>第8章]
+    H --> I[Day2運用<br/>第9章]
+
+    style A fill:#e1f5e1
+    style B fill:#e1f5e1
+    style C fill:#fff3e0
+    style D fill:#fff3e0
+    style E fill:#e3f2fd
+    style F fill:#e3f2fd
+    style G fill:#fce4ec
+    style H fill:#fce4ec
+    style I fill:#f3e5f5
+```
+
 ## 本書のゴール
 
 「**他クラウドの感覚で Azure を正しく使う**」スキルを体系的に獲得することが、本書の最終ゴールです。Azure Portal の画面操作を一つひとつ追うのではなく、コマンドラインでの再現可能な環境構築を通じて、以下の能力を身につけます。

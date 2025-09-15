@@ -10,6 +10,41 @@
 
 この章を終えれば、あなたはセキュアで独立したネットワーク空間を定義し、その中でリソースを安全に動かすためのネットワークの基礎を固めることができます。
 
+## ネットワークアーキテクチャの全体像
+
+```mermaid
+graph TB
+    subgraph "Azure Virtual Network (10.20.0.0/16)"
+        subgraph "Subnet: snet-app-01 (10.20.1.0/24)"
+            NSG[Network Security Group<br/>nsg-app-01]
+            VM[Future VMs/<br/>Applications]
+        end
+
+        subgraph "Private Endpoint Subnet"
+            PE[Private Endpoint<br/>for Storage]
+        end
+    end
+
+    subgraph "Azure PaaS Services"
+        Storage[Storage Account<br/>sthdkbnet***]
+    end
+
+    subgraph "Private DNS Zone"
+        DNS[privatelink.blob.core.windows.net]
+    end
+
+    Internet[Internet] -->|HTTP/HTTPS<br/>Allowed| NSG
+    NSG --> VM
+    VM -->|Private Connection| PE
+    PE -->|Private IP| Storage
+    DNS -->|Name Resolution| PE
+
+    style NSG fill:#ff9800,color:#fff
+    style PE fill:#4caf50,color:#fff
+    style Storage fill:#2196f3,color:#fff
+    style DNS fill:#9c27b0,color:#fff
+```
+
 ---
 
 ## ハンズオン：VNet, NSG, Private Endpoint の構築
